@@ -1,0 +1,43 @@
+= RustyHermit
+:revealjs_customtheme: rwth.css
+:revealjs_progress: true
+:revealjs_slideNumber: true
+:revealjs_history: true
+:revealjs_viewDistance: 3
+:revealjs_mobileViewDistance: 2
+:revealjs_preloadIframes: null
+:revealjs_margin: 0.1
+:revealjs_hash: true
+:revealjs_center: false
+:revealjs_slideNumber: true
+:revealjs_plugins: revealjs-plugins.js
+:revealjs_plugins_configuration: revealjs-plugins-conf.js
+:revealjs_plugin_pdf: enabled
+:revealjs_transition: none
+:source-highlighter: highlightjs
+:highlightjs-theme: solarized-dark.css
+:highlightjs-languages: x86asm
+:icons: font
+:author: Stefan Lankes
+:twitter: stlankes
+:description: Short Introduction into RustyHermit
+:bibtex-file: references.bib
+:bibtex-style: ieee
+:bibtex-locale: en-US
+:stem: latexmath
+:docinfo:
+:docinfo1:
+
+{description}
+
+[.small]
+Institute for Automation of Complex Power Systems
+
+[.small]
+RWTH Aachen University
+
+[.small]
+https://www.acs.eonerc.rwth-aachen.de[https://www.acs.eonerc.rwth-aachen.de]
+
+== Introduction
+
