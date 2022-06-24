@@ -21,6 +21,8 @@ jobs:
       run: |
         sudo apt-get -yqq install libpq-dev
         gem install bundler
+    - name: Install missing gems
+      run: bundle install
     - name: Build pages
       run: make
     - name: Deploy to GitHub Pages
