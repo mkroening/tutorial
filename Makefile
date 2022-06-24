@@ -9,6 +9,7 @@ default: slides.adoc $(BLKEXT) $(BUNDLEDIR)
 		$(ADOC_OPTS) \
 		$(ADOC_DEPS) \
 		$<
+	mv $(BUILDDIR)/slides.html $(BUILDDIR)/index.html
 	cp revealjs-plugins-conf.js $(BUILDDIR)/
 	cp revealjs-plugins.js $(BUILDDIR)/
 	cp -R plugins $(BUILDDIR)/
