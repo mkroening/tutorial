@@ -41,3 +41,96 @@ https://www.acs.eonerc.rwth-aachen.de[https://www.acs.eonerc.rwth-aachen.de]
 
 == Introduction
 
+* Project startet with HermitCore footnote:[bibitem:[Lankes16]] for HPC
+* Combination of the Unikernel and Multi-Kernel to reduce the overhead
+** The same binary is able to run
+*** in a VM (classical unikernel setup)
+*** or bare-metal side-by-side to Linux (multi-kernel setup)
+
+image::images/multikernel.png[HermitCore as Unikernel, width=40%]
+
+=== HermitCore Features
+
+image::images/multikernel.png[HermitCore as Unikernel, width=40%]
+
+* Support for dominant programming models (OpenMP)
+* Single-address space operating system
+** No TLB Shootdown
+* Runtime support
+** Full C-library support (newlib)
+** Support of Pthreads and OpenMP
+** Full integration within GCC ⇒ Support of C / C++, Fortran, Go
+
+=== HermitCore
+
+image::images/multikernel.png[HermitCore as Unikernel, width=40%]
+
+* Completly written in C => error-prone
+* Combination of different tools to manage the build process (`make`, `cmake`)
+** difficult to understand
+* Difficult to maintain code, which is (more or less) equivalent between kernel- and user-space
+** e. g. detection of CPU features
+
+=== Why Rust for Kernel Development?
+
+* Safe memory handling by Ownership & Borrowing
+* Runtime is split into a OS-independent (`libcore`) and OS-dependent (`libstd`) part
+* By registration of a memory allocator, dynamic data structures are already supported
+** Queues, heaps, and linked lists are part of `liballoc`
+* The Rust community want to create fast *and* safe code
+** Support to bypass the strict rules => `unsafe` code
+* Already used in many https://rust-osdev.com[kernel-related projects]
+** Many projects share their code by Rust’s package manager
+** For instance, x86 specific data structures are shared in https://crates.io/crates/x86
+
+[source, Rust]
+----
+pub unsafe fn wrmsr(msr: u32, value: u64) { 
+    let low = value as u32;
+    let high = (value >> 32) as u32;
+    asm!("wrmsr", in("ecx") msr, in("eax") low, in("edx") high);
+}
+----
+
+
+=== Do we have disadvantage?
+
+* Kernel development requires Rust's _nightly_ compiler
+* Rust code isn't easy
+** It takes time to write applications
+* In general C code should be faster 
+
+=== Removing of POSIX-based system libraries
+
+image::images/rustyhermit.png[RustyHermit, width=40%]
+
+* Removing the dependency to the original toolchain
+** No cross-compiler required
+** Using of Rust’s default linker
+* The kernel is still a static library
+** Using of a C-based binary interface
+** Official part of Rust's https://github.com/rust-lang/rust/tree/master/library/std/src/sys/hermit[`libstd`]
+
+== Conclusion
+
+* Test it!
+* Try it!
+* Have fun with system software!
+
+== License & Data Privacy
+
+* Unless otherwise specified
+** Text and pictures are licensed by http://creativecommons.org/licenses/by-nc-sa/3.0/de/[Creative Commons BY-NC-SA 3.0 DE]
+** Source code licensed under any of following license model
+*** https://opensource.org/licenses/MIT[MIT License]
+*** http://www.apache.org/licenses/LICENSE-2.0[Apache License 2.0]
+
+== Imprint
+
+Dr. rer. nat. Stefan Lankes
+
+RWTH Aachen University, E.ON Energy Research Center,
+
+Mathieustraße 10, 52074 Aachen, Germany
+
+Email: mailto:slankes@eonerc.rwth-aachen.de[slankes@eonerc.rwth-aachen.de]

@@ -1,4 +1,4 @@
-ADOC_DEPS = #-r asciidoctor-bibtex -r ./OSbyExample.rb
+ADOC_DEPS = -r asciidoctor-bibtex
 ADOC_OPTS = -a revealjsdir=https://cdn.jsdelivr.net/npm/reveal.js@3.9.2 \
 	--destination-dir=. --trace
 
