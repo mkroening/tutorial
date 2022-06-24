@@ -19,8 +19,8 @@ jobs:
         ruby-version: '2.6'
     - name: Install bundler
       run: |
-        apt update
-        apt install bundler
+        sudo apt-get -yqq install libpq-dev
+        gem install bundler
     - name: Build pages
       run: make
     - name: Deploy to GitHub Pages
