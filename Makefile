@@ -1,12 +1,22 @@
+BUILDDIR ?= out
+
 ADOC_DEPS = -r asciidoctor-bibtex
 ADOC_OPTS = -a revealjsdir=https://cdn.jsdelivr.net/npm/reveal.js@3.9.2 \
-	--destination-dir=. --trace
+	--destination-dir=$(BUILDDIR) --trace
 
 default: slides.adoc $(BLKEXT) $(BUNDLEDIR)
 	bundle exec asciidoctor-revealjs \
 		$(ADOC_OPTS) \
 		$(ADOC_DEPS) \
 		$<
+	cp revealjs-plugins-conf.js $(BUILDDIR)/
+	cp revealjs-plugins.js $(BUILDDIR)/
+	cp -R plugins $(BUILDDIR)/
+	cp *.css $(BUILDDIR)/
+	cp -R fonts $(BUILDDIR)/
+	cp -R images $(BUILDDIR)/
+	#cp -R videos $(BUILDDIR)/
+
 clean:
 	rm -f slides.html
 
