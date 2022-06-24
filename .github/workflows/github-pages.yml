@@ -17,6 +17,10 @@ jobs:
       uses: actions/setup-ruby@v1
       with:
         ruby-version: '2.6'
+    - name: Install bundler
+      run: |
+        apt update
+        apt install bundler
     - name: Build pages
       run: make
     - name: Deploy to GitHub Pages
