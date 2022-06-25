@@ -111,6 +111,164 @@ image::images/rustyhermit.png[RustyHermit, width=40%]
 ** Using of a C-based binary interface
 ** Official part of Rust's https://github.com/rust-lang/rust/tree/master/library/std/src/sys/hermit[`libstd`]
 
+== Requirements
+
+* https://www.rust-lang.org[Rust toolchain]
+** Installing Rust on Unix
+** Please install the `stable` toolchain
+
+[source, shell]
+----
+$ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+----
+
+* Required tools
+** The tutorial based on https://www.qemu.org[Qemu]
+** Windows users should take a look at https://chocolatey.org[Chocolatey], macOS users at https://brew.sh[brew] to install Qemu
+** Here Ubuntu is used as host system
+
+[source, shell]
+----
+$ sudo apt-get install qemu-system-x86 nasm git
+----
+
+== Build your first RustHermit Application
+
+* Use our demo application as start point
+
+[source, shell]
+----
+$ git clone git@github.com:hermitcore/rusty-demo.git 
+$ cd rusty-demo 
+$ git submodule init
+$ git submodule update
+----
+
+* Cargo is the Rust package manager and already installed with your toolchain
+* `Cargo.toml` is describing your dependencies
+* `hermit-sys` is a helper crate to build the libOS.
+
+[source, TOML]
+----
+[package]
+name = "hello_world"
+version = "0.1.0"
+authors = ["Stefan Lankes <slankes@eonerc.rwth-aachen.de>"]
+edition = "2021"
+publish = false
+license = "MIT/Apache-2.0"
+readme = "README.md"
+description = "Hello, RustyHermit!"
+
+[target.'cfg(target_os = "hermit")'.dependencies]
+hermit-sys = "0.2"
+----
+
+=== Key elements of HelloWorld
+
+* The main program is stored in `src/main.rs`
+** Import the helper crate `hermit-sys`
+
+[source, Rust]
+----
+#[cfg(target_os = "hermit")]
+use hermit_sys as _;
+
+fn main() {
+	println!("Hello World!");
+}
+----
+
+* `rust-toolchain.toml` specified the used nightly compiler.
+
+[source, TOML]
+----
+[toolchain]
+channel = "nightly-2022-05-15"
+components = [
+    "rust-src",
+    "llvm-tools-preview",
+    "rustfmt",
+    "clippy",
+]
+targets = [ "x86_64-unknown-hermit" ]
+----
+
+=== Building the demo application
+
+* Build `HelloWorld` for RustyHermit
+
+[source, shell]
+----
+$ cargo build -Zbuild-std=core,alloc,std,panic_abort \
+    -Zbuild-std-features=compiler-builtins-mem \
+    --target x86_64-unknown-hermit          
+----
+
+* `-Zbuild-std` rebuilds the `libstd` and `-Zbuild-std-features` the compiler buitins (e.g. `memcpy`)
+* To run RustyHermint in Qemu a bootloader is required.
+** Already part of the repository
+** Build bootloader
+
+[source, shell]
+----
+$ cd loader
+$ cargo xtask build --arch x86_64
+$ cd --
+----
+
+=== Run `HelloWorld`
+
+* Test RustyHermit in Qemu
+
+[source, shell]
+----
+$ qemu-system-x86_64 -smp 1 -display none -m 1G -serial stdio \
+    -cpu qemu64,apic,fsgsbase,rdtscp,xsave,xsaveopt,fxsr \
+    -device isa-debug-exit,iobase=0xf4,iosize=0x04 \
+    -kernel loader/target/x86_64/debug/rusty-loader \
+    -initrd target/x86_64-unknown-hermit/debug/hello_world \
+    -smp 1
+[source, shell]
+----
+
+* It should run...
+
+[source, shell]
+----
+[0][INFO] HermitCore is running on common system!
+Hello World!
+[0][INFO] Number of interrupts
+[0][INFO] [0][7]: 1
+[0][INFO] Shutting down system
+----
+
+=== Release Versions
+
+* Build a release version to optimize your code
+
+[source, shell]
+----
+$ cargo build -Zbuild-std=core,alloc,std,panic_abort -Zbuild-std-features=compiler-builtins-mem --target x86_64-unknown-hermit --release
+$ cd loader
+$ cargo xtask build --arch x86_64 --release
+$ cd -
+$ qemu-system-x86_64 -smp 1 -display none -m 1G -serial stdio \
+    -cpu qemu64,apic,fsgsbase,rdtscp,xsave,xsaveopt,fxsr \
+    -device isa-debug-exit,iobase=0xf4,iosize=0x04 \
+    -kernel loader/target/x86_64/release/rusty-loader \
+    -initrd target/x86_64-unknown-hermit/release/hello_world \
+    -smp 1
+----
+
+* Code size
+
+[source, shell]
+----
+$ -rwxr-xr-x  87368 loader/target/x86_64/release/rusty-loader
+$ -rwxr-xr-x  4747296 target/x86_64-unknown-hermit/release/hello_world
+----
+
 == Conclusion
 
 * Test it!
