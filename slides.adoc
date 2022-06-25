@@ -220,6 +220,8 @@ $ cd --
 === Run `HelloWorld`
 
 * Test RustyHermit in Qemu
+** Add flag `--enable-kvm` to accelerate virtualization
+*** Requires Linux
 
 [source, shell]
 ----
@@ -400,6 +402,108 @@ Pi: 3.14159265358991
 [0][INFO] [1][Wakeup]: 1
 [0][INFO] Shutting down system
 ----
+
+== HTTPD
+
+* https://crates.io[crates.io] is Rust's community registry
+** Platform to publish open-source tools
+* Here: Using fo https://crates.io/crates/tiny_http[tiny_https]
+* Change the code like tiny_http's README and add an option to enable TCP support
+
+[source, TOML]
+----
+[package]
+...
+
+[dependencies]
+tiny_http = "0.11"
+
+[target.'cfg(target_os = "hermit")'.dependencies.hermit-sys]
+default-features = false
+
+[features]
+default = ["pci", "acpi", "tcp"]
+vga = ["hermit-sys/vga"]
+dhcpv4 = ["hermit-sys/dhcpv4"]
+pci = ["hermit-sys/pci"]
+acpi = ["hermit-sys/acpi"]
+fsgsbase = ["hermit-sys/fsgsbase"]
+smp = ["hermit-sys/smp"]
+tcp = ["hermit-sys/tcp"]
+instrument = ["hermit-sys/instrument"]
+trace = ["hermit-sys/trace"]
+----
+
+=== Server itself is already explained in the README
+
+* No changes required to the `tiny_http` example
+
+[source, Rust]
+----
+#[cfg(target_os = "hermit")]
+use hermit_sys as _;
+use tiny_http::{Response, Server};
+
+fn main() {
+	let server = Server::http("0.0.0.0:8000").unwrap();
+
+	for request in server.incoming_requests() {
+		println!(
+			"received request! method: {:?}, url: {:?}, headers: {:?}",
+			request.method(),
+			request.url(),
+			request.headers()
+		);
+
+		let response = Response::from_string("hello world");
+		request.respond(response);
+	}
+}
+
+----
+
+=== Server depends on a TAP device
+
+* In principle, TAP build a tunnel between guest and host
+** Ethernet frames are directly passed from the guest kernel to the host kernel
+
+[source, shell]
+----
+sudo ip tuntap add tap10 mode tap
+sudo ip addr add 10.0.5.1/24 broadcast 10.0.5.255 dev tap10
+sudo ip link set dev tap10 up
+----
+
+* Boot kernel
+
+[source, shell]
+----
+sudo qemu-system-x86_64 --enable-kvm -cpu qemu64,apic,fsgsbase,rdtscp,xsave,xsaveopt,fxsr \
+   -display none -smp 1 -m 1G -serial stdio \
+   -kernel loader/target/x86_64/release/rusty-loader \
+   -initrd target/x86_64-unknown-hermit/debug/httpd \
+   -netdev tap,id=net0,ifname=tap10,script=no,downscript=no,vhost=on \
+   -device virtio-net-pci,netdev=net0,disable-legacy=on
+----
+
+* Send a request to the server
+
+[source, shell]
+----
+$ curl http://10.0.5.3:9975/hello
+Hello from RustyHermit 🦀
+----
+
+== Work in progress
+
+* Support of microVM (e.g. https://qemu.readthedocs.io/en/latest/system/i386/microvm.html[Qemu's microvm’virtual platform])
+** Thanks to Yu Duan
+* Container orchestration
+** Realization of an https://github.com/hermitcore/runh[own container spawner]
+** Base on the https://github.com/opencontainers/runtime-spec[OCI runtime specification]
+** Thanks to Jonas Schroeder
+
+image:images/oci.png[OCI, width=40%]
 
 == Conclusion
 
