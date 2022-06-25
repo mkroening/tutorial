@@ -20,7 +20,7 @@
 :icons: font
 :author: Stefan Lankes
 :twitter: stlankes
-:description: Short Introduction into RustyHermit
+:description: Short introduction into RustyHermit
 :bibtex-file: references.bib
 :bibtex-style: ieee
 :bibtex-locale: en-US
