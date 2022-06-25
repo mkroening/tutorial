@@ -496,7 +496,8 @@ Hello from RustyHermit 🦀
 
 == Work in progress
 
-* Support of microVM (e.g. https://qemu.readthedocs.io/en/latest/system/i386/microvm.html[Qemu's microvm’virtual platform])
+* Support of Virtio-FS
+* Support of microVMs (e.g. https://qemu.readthedocs.io/en/latest/system/i386/microvm.html[Qemu's microvm’virtual platform])
 ** Thanks to Yu Duan
 * Container orchestration
 ** Realization of an https://github.com/hermitcore/runh[own container spawner]
