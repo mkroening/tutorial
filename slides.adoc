@@ -269,6 +269,138 @@ $ -rwxr-xr-x  87368 loader/target/x86_64/release/rusty-loader
 $ -rwxr-xr-x  4747296 target/x86_64-unknown-hermit/release/hello_world
 ----
 
+== Concurrent applications
+
+* The calculation of PI is used
+
+image::images/pi.png[width=40%]
+
+* Sequential solution
+** Create a new branch to avoid unintended changes (e.g. `git checkout -b pi`)
+
+[source, Rust]
+----
+let step = 1.0 / num_steps as f64;
+	let mut sum = 0 as f64;
+
+	for i in 0..num_steps {
+		let x = (i as f64 + 0.5) * step;
+		sum += 4.0 / (1.0 + x * x);
+	}
+----
+
+=== Naive solution
+
+* Rust: It exists only one owner of an object
+** No races possible
+** Compiler is able to detect it
+
+[source, Rust]
+----
+let step = 1.0 / NUM_STEPS as f64;
+let mut sum = 0.0 as f64;
+
+let threads: Vec<_> = (0..nthreads)
+    .map(|tid| {
+        thread::spawn(move || 	{
+            let start = (NUM_STEPS / nthreads) * tid;
+            let end = (NUM_STEPS / nthreads) * (tid+1);
+
+            for i  in start..end {
+                let x = (i as f64 + 0.5) * step;
+                sum += 4.0 / (1.0 + x * x);
+            }
+        })
+    }).collect();
+----
+
+=== Compiler error
+
+* Compiler is able to detect the error
+
+[source, Rust]
+----
+error: cannot assign to immutable captured outer variable
+   |
+43 |   sum += 4.0 / (1.0 + x * x);
+   |   ^^^^^^^^^^^^^^^^^^^^^^^^^^
+----
+
+=== First concurrent solution (I)
+
+* Using threads of Rust`s `libstd`
+
+[source, Rust]
+----
+#[cfg(target_os = "hermit")]
+use hermit_sys as _;
+
+use std::thread;
+use std::time::Instant;
+
+const NUM_STEPS: u64 = 1000000;
+const NTHREADS: u64 = 2;
+
+fn main() {
+	let step = 1.0 / NUM_STEPS as f64;
+	let mut sum = 0.0 as f64;
+	let now = Instant::now();
+
+	let threads: Vec<_> = (0..NTHREADS)
+		.map(|tid| {
+			thread::spawn(move || {
+				let mut partial_sum = 0 as f64;
+				let start = (NUM_STEPS / NTHREADS) * tid;
+				let end = (NUM_STEPS / NTHREADS) * (tid + 1);
+
+				for i in start..end {
+					let x = (i as f64 + 0.5) * step;
+					partial_sum += 4.0 / (1.0 + x * x);
+				}
+
+				partial_sum
+			})
+		})
+		.collect();
+
+	for t in threads {
+		sum += t.join().unwrap();
+	}
+
+	let duration = now.elapsed();
+
+	println!(
+		"Time to calculate (local sum): {}",
+		duration.as_secs() as f64 + (duration.subsec_nanos() as f64 / 1000000000.0)
+	);
+	println!("Pi: {}", sum * (1.0 / NUM_STEPS as f64));
+}
+----
+
+=== First concurrent solution (II)
+
+* Test it with more than one CPU
+
+[source, shell]
+----
+$ cargo build -Zbuild-std=core,alloc,std,panic_abort -Zbuild-std-features=compiler-builtins-mem --target x86_64-unknown-hermit --release
+$ qemu-system-x86_64 -smp 1 -display none -m 1G -serial stdio \
+    -cpu qemu64,apic,fsgsbase,rdtscp,xsave,xsaveopt,fxsr \
+    -device isa-debug-exit,iobase=0xf4,iosize=0x04 \
+    -kernel loader/target/x86_64/release/rusty-loader \
+    -initrd target/x86_64-unknown-hermit/release/hello_world \
+    -smp 2
+
+Time to calculate (local sum): 4.154339
+Pi: 3.14159265358991
+[0][INFO] Number of interrupts
+[0][INFO] [0][7]: 3
+[0][INFO] [0][Wakeup]: 1
+[0][INFO] [1][7]: 1
+[0][INFO] [1][Wakeup]: 1
+[0][INFO] Shutting down system
+----
+
 == Conclusion
 
 * Test it!
