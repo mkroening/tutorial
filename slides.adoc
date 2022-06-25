@@ -231,7 +231,6 @@ $ qemu-system-x86_64 -smp 1 -display none -m 1G -serial stdio \
     -kernel loader/target/x86_64/debug/rusty-loader \
     -initrd target/x86_64-unknown-hermit/debug/hello_world \
     -smp 1
-[source, shell]
 ----
 
 * It should run...
