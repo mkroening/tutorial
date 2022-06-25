@@ -250,7 +250,9 @@ Hello World!
 
 [source, shell]
 ----
-$ cargo build -Zbuild-std=core,alloc,std,panic_abort -Zbuild-std-features=compiler-builtins-mem --target x86_64-unknown-hermit --release
+$ cargo build -Zbuild-std=core,alloc,std,panic_abort \
+    -Zbuild-std-features=compiler-builtins-mem \
+    --target x86_64-unknown-hermit --release
 $ cd loader
 $ cargo xtask build --arch x86_64 --release
 $ cd -
