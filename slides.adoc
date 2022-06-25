@@ -329,7 +329,7 @@ error: cannot assign to immutable captured outer variable
    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^
 ----
 
-=== First concurrent solution (I)
+=== Concurrent solution (I)
 
 * Using threads of Rust`s `libstd`
 
@@ -380,7 +380,7 @@ fn main() {
 }
 ----
 
-=== First concurrent solution (II)
+=== Concurrent solution (II)
 
 * Test it with more than one CPU
 
@@ -407,7 +407,7 @@ Pi: 3.14159265358991
 == HTTPD
 
 * https://crates.io[crates.io] is Rust's community registry
-** Platform to publish open-source tools
+** Platform to publish open-source code
 * Here: Using fo https://crates.io/crates/tiny_http[tiny_https]
 * Change the code like tiny_http's README and add an option to enable TCP support
 
@@ -481,7 +481,7 @@ sudo ip link set dev tap10 up
 ----
 sudo qemu-system-x86_64 --enable-kvm -cpu qemu64,apic,fsgsbase,rdtscp,xsave,xsaveopt,fxsr \
    -display none -smp 1 -m 1G -serial stdio \
-   -kernel loader/target/x86_64/release/rusty-loader \
+   -kernel loader/target/x86_64/debug/rusty-loader \
    -initrd target/x86_64-unknown-hermit/debug/httpd \
    -netdev tap,id=net0,ifname=tap10,script=no,downscript=no,vhost=on \
    -device virtio-net-pci,netdev=net0,disable-legacy=on
