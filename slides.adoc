@@ -406,10 +406,9 @@ Pi: 3.14159265358991
 
 == HTTPD
 
-* https://crates.io[crates.io] is Rust's community registry
-** Platform to publish open-source code
-* Here: Using fo https://crates.io/crates/tiny_http[tiny_https]
-* Change the code like tiny_http's README and add an option to enable TCP support
+* https://crates.io[crates.io] is Rust's community registry for publishing open-source code
+** Here: Using of https://crates.io/crates/tiny_http[tiny_http]
+* Change `Cargo.toml` like https://crates.io/crates/tiny_http[tiny_http's] README and add options to enable TCP & DHCP support
 
 [source, TOML]
 ----
@@ -423,21 +422,19 @@ tiny_http = "0.11"
 default-features = false
 
 [features]
-default = ["pci", "acpi", "tcp"]
-vga = ["hermit-sys/vga"]
+default = ["pci", "pci-ids", "acpi", "tcp", "dhcpv4"]
 dhcpv4 = ["hermit-sys/dhcpv4"]
 pci = ["hermit-sys/pci"]
+pci-ids = ["hermit-sys/pci-ids"]
+tcp = ["hermit-sys/tcp"]
 acpi = ["hermit-sys/acpi"]
 fsgsbase = ["hermit-sys/fsgsbase"]
-smp = ["hermit-sys/smp"]
-tcp = ["hermit-sys/tcp"]
-instrument = ["hermit-sys/instrument"]
 trace = ["hermit-sys/trace"]
 ----
 
 === Server itself is already explained in the README
 
-* No changes required to the `tiny_http` example
+* Use example from https://crates.io/crates/tiny_http[tiny_http's] README
 
 [source, Rust]
 ----
@@ -460,19 +457,96 @@ fn main() {
 		request.respond(response);
 	}
 }
-
 ----
 
-=== Server depends on a TAP device
+=== Running HTTPD
 
-* In principle, TAP build a tunnel between guest and host
-** Ethernet frames are directly passed from the guest kernel to the host kernel
+* Build httpd
 
 [source, shell]
 ----
-sudo ip tuntap add tap10 mode tap
-sudo ip addr add 10.0.5.1/24 broadcast 10.0.5.255 dev tap10
-sudo ip link set dev tap10 up
+$ cargo build -Zbuild-std=core,alloc,std,panic_abort \
+    -Zbuild-std-features=compiler-builtins-mem \
+    --target x86_64-unknown-hermit          
+----
+
+* Start Qemu with the emulation of the network card RTL8139
+** Forward any requests at the host port 8000 to the quest
+
+[source, shell]
+----
+qemu-system-x86_64 -cpu qemu64,apic,fsgsbase,rdtscp,xsave,xsaveopt,fxsr \
+   -device isa-debug-exit,iobase=0xf4,iosize=0x04 -display none \
+   -serial stdio -kernel loader/target/x86_64/debug/rusty-loader \
+   -initrd target/x86_64-unknown-hermit/debug/hello_world \
+   -netdev user,id=u1,hostfwd=tcp::8000-:8000 \
+   -device rtl8139,netdev=u1 -smp 1 -m 1G
+----
+
+* Send a request to the server
+
+[source, shell]
+----
+$ curl http://127.0.0.1:8000/hello
+hello world
+----
+
+=== Using Virtio 
+
+* To increase the performance, https://www.linux-kvm.org/page/Virtio[virtio] can be used
+** Requires Linux as host operating system
+* A TAP device is used to forward ethernet frames from the guest to the host system
+* In addition, a bridge allows VMs to have their own IP addresses while using the same physical link
+
+[source, shell]
+----
+        |
+        | physical link
+        |
+        o br0
+       / \
+      /   \
+eth0 o     o tap0
+           |
+- - - - - - - - - - - - - - - Host / VM boundary
+           |
+           o device inside VM
+----
+
+=== Create bridge
+
+* *Assumption:* `eth0` is connected to the physical link and maintains the IP address of the host
+** Modern Linux use often another name for `eth0`
+* At first, create bridge and connect `eth0` to the bridge
+** Please note that these commands will *drop internet connectivity* of your machine.
+
+[source, shell]
+----
+# Create bridge
+sudo ip link add bridge0 type bridge
+sudo ip link set bridge0 up
+
+# According to Arch wiki eth0 needs to be up
+sudo ip link set eth0 up
+sudo ip link set eth0 master bridge0
+
+# Drop existing IP from eth0
+sudo ip addr flush dev eth0
+
+# Assign IP to bridge0
+sudo ip addr add 192.168.122.10/24 brd + dev bridge0
+sudo ip route add default via 192.168.122.1 dev bridge0
+----
+
+=== Create TAP device and boot HTTPD
+
+* Create TAP device and a assign it to the bridge
+
+[source, shell]
+----
+sudo ip tuntap add tap0 mode tap
+sudo ip link set dev tap0 up
+sudo ip link set tap0 master bridge0
 ----
 
 * Boot kernel
@@ -483,15 +557,28 @@ sudo qemu-system-x86_64 --enable-kvm -cpu qemu64,apic,fsgsbase,rdtscp,xsave,xsav
    -display none -smp 1 -m 1G -serial stdio \
    -kernel loader/target/x86_64/debug/rusty-loader \
    -initrd target/x86_64-unknown-hermit/debug/httpd \
-   -netdev tap,id=net0,ifname=tap10,script=no,downscript=no,vhost=on \
+   -netdev tap,id=net0,ifname=tap0,script=no,downscript=no,vhost=on \
    -device virtio-net-pci,netdev=net0,disable-legacy=on
+----
+
+=== Test HTTPD
+
+* Wait for the IP configuration
+
+[source, shell]
+----
+Now listening on port 8000
+[INFO] DHCP config acquired!
+[INFO] IP address:      192.168.122.76/24
+[INFO] Default gateway: 192.168.122.1
+[INFO] DNS server 0:    192.168.122.1
 ----
 
 * Send a request to the server
 
 [source, shell]
 ----
-$ curl http://10.0.5.3:9975/hello
+$ curl http://192.168.122.76:8000/hello
 Hello from RustyHermit 🦀
 ----
 
