@@ -23,8 +23,10 @@ jobs:
         gem install bundler
     - name: Install missing gems
       run: bundle install
+      working-directory: slides
     - name: Build pages
       run: make
+      working-directory: slides
     - name: Deploy to GitHub Pages
       if: success()
       uses: crazy-max/ghaction-github-pages@v3
