@@ -99,12 +99,12 @@ pub unsafe fn wrmsr(msr: u32, value: u64) {
 * Rust code isn't easy
 ** It takes time to write applications
 * In general C code should be faster 
-
+* * See _Exploring Rust for Unikernel Development_ footnote:[bibitem:[Lankes19]] for details
 === Removing of POSIX-based system libraries
 
 image::images/rustyhermit.png[RustyHermit, width=40%]
 
-* Removing the dependency to the original toolchain footnote:[bibitem:[Lankes19]]
+* Removing the dependency to the original toolchain
 ** No cross-compiler required
 ** Using of Rust’s default linker
 * The kernel is still a static library
