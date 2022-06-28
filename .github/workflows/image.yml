@@ -38,8 +38,10 @@ jobs:
     - name: Build httpd
       run: |
         cargo build -Zbuild-std=core,alloc,std,panic_abort -Zbuild-std-features=compiler-builtins-mem --target x86_64-unknown-hermit --release
-        cd loader
+    - name: Build loader
+      run: |
         cargo xtask build --arch x86_64 --release
+      working-directory: loader
     - name: Create dockerfile
       run: |
         cat << END > Dockerfile
