@@ -60,7 +60,11 @@ Open with with your browser `http://127.0.0.1:9975/` and read the tutorial.
 
 ## License
 
-* Text and pictures are licensed by http://creativecommons.org/licenses/by-nc-sa/3.0/de/[Creative Commons BY-NC-SA 3.0 DE]
-* Source code licensed under any of following license model
-** https://opensource.org/licenses/MIT[MIT License]
-** http://www.apache.org/licenses/LICENSE-2.0[Apache License 2.0]
+Text and pictures are licensed by http://creativecommons.org/licenses/by-nc-sa/3.0/de/[Creative Commons BY-NC-SA 3.0 DE]
+
+Source code licensed under either of
+
+* Apache License, Version 2.0, ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
+* MIT license ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
+
+at your option.
