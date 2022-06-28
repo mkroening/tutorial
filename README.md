@@ -56,7 +56,7 @@ $ qemu-system-x86_64 \
 
 ### Read the tutorial
 
-Open with with your browser `http://127.0.0.1:9975/` and read the tutorial.
+Open with your browser `http://127.0.0.1:9975/` and read the tutorial.
 
 ## License
 
