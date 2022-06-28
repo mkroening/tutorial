@@ -5,6 +5,13 @@ on:
   pull_request:
     branches: [ main ]
 
+env:
+  CARGO_TERM_COLOR: always
+
+defaults:
+  run:
+    shell: bash
+
 jobs:
   docs:
     runs-on: ubuntu-latest
