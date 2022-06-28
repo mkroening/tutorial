@@ -11,10 +11,10 @@ jobs:
       uses: actions/checkout@v3
       with:
          lfs: true
-    - name: Install make
+    - name: Install NASM
       run: |
         sudo apt-get update
-        sudo apt-get install make
+        sudo apt-get install make nasm
     - name: Install Ruby
       uses: actions/setup-ruby@v1
       with:
