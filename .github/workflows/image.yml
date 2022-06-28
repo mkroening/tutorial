@@ -11,7 +11,7 @@ defaults:
     shell: bash
 
 jobs:
-  docs:
+  publish_image:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout repo
